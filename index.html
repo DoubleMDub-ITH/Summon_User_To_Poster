@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Poster Scan</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      padding: 40px;
+      background: #f4f4f4;
+      color: #333;
+    }
+    h1 { font-size: 1.8em; margin-bottom: 20px; }
+    button {
+      background: #2E8B57;
+      color: white;
+      border: none;
+      padding: 16px 32px;
+      font-size: 1.2em;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      transition: 0.3s;
+    }
+    button:hover { background: #276945; transform: scale(1.05); }
+    .thanks { margin-top: 20px; font-size: 1.1em; color: #2E8B57; display: none; }
+  </style>
+</head>
+<body>
+  <h1>Thanks for scanning!</h1>
+  <p>Tap below to let me know:</p>
+  <button onclick="sendScan()">I scanned this poster!</button>
+  <p class="thanks" id="thanks">Sent anonymously — thank you!</p>
+
+  <script>
+    async function sendScan() {
+      const btn = document.querySelector('button');
+      const thanks = document.getElementById('thanks');
+      
+      btn.disabled = true;
+      btn.textContent = "Sending...";
+
+      try {
+        await fetch('https://hooks.zapier.com/hooks/catch/25280641/usgodzl/', {
+          method: 'POST',
+          mode: 'no-cors',
+          body: JSON.stringify({
+            timestamp: new Date().toISOString(),
+            action: 'poster_scan'
+          })
+        });
+        btn.style.display = 'none';
+        thanks.style.display = 'block';
+      } catch (e) {
+        btn.textContent = "Try again";
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
