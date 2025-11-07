@@ -31,32 +31,55 @@
 <body>
   <h1>Thank you for scanning!</h1>
   <p>Tap below to let me know you are at poster 1483 and would like to talk to me! (This will page me!):</p>
-  <button onclick="sendScan()">I scanned this poster! (100% anonymous)</button>
+  <button onclick="sendScan()">Click to page me! (100% anonymous)</button>
   <p class="thanks" id="thanks">Sent 100% anonymously — Thank you! Be there ASAP.</p>
 
-  <script>
+ <script>
     async function sendScan() {
       const btn = document.querySelector('button');
       const thanks = document.getElementById('thanks');
-      
-      btn.disabled = true;
-      btn.textContent = "Sending...";
 
-      try {
-        await fetch('https://maker.ifttt.com/trigger/Page to Poster/with/key/jULO7YKlFrrZw-hj7tG7v5x4AEz6TodDfU9_gMZsaKX', {
-          method: 'POST',
-          body: new URLSearchParams({
-            value1: new Date().toISOString(),  // Maps to {{Value1}} in IFTTT
-            value2: 'poster_scan'              // Maps to {{Value2}} in IFTTT
-          })
-        });
+      // === PREVENT RE-CLICK OR RELOAD TRICK ===
+      if (localStorage.getItem('poster1483_sent') === 'true') {
         btn.style.display = 'none';
         thanks.style.display = 'block';
+        return;
+      }
+
+      // === DISABLE BUTTON & SHOW SENDING ===
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+
+      try {
+        await fetch('https://maker.ifttt.com/trigger/poster_scan_1483/with/key/YOUR_IFTTT_KEY', {
+          method: 'POST',
+          body: new URLSearchParams({
+            value1: new Date().toISOString(),
+            value2: 'poster_scan'
+          })
+        });
+        finish();  // Success
       } catch (e) {
-        btn.textContent = "Try again";
-        btn.disabled = false;
+        console.warn('Notification failed, but still marking as sent', e);
+        finish();  // Failure → still show thanks (no spam)
+      }
+
+      // === FINAL UI: Hide button, show thanks, remember forever ===
+      function finish() {
+        btn.style.display = 'none';
+        thanks.style.display = 'block';
+        localStorage.setItem('poster1483_sent', 'true');
       }
     }
+
+    // === ON PAGE LOAD: Restore state if already sent ===
+    window.addEventListener('load', () => {
+      if (localStorage.getItem('poster1483_sent') === 'true') {
+        document.querySelector('button').style.display = 'none';
+        document.getElementById('thanks').style.display = 'block';
+      }
+    });
   </script>
 </body>
+</html>
 </html>
