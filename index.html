@@ -30,13 +30,13 @@
 </head>
 <body>
   <h1>Thank you for scanning!</h1>
-  <p>Tap below to let me know you are at poster 1483 and would like to talk to me! (This will page me!):</p>
+  <p>Tap below to let me know you are at poster 1483 and would like to talk to me! (This will page me!)</p>
   <button onclick="sendScan()">Click to page me! (100% anonymous)</button>
   <p class="thanks" id="thanks">Sent 100% anonymously — Thank you! Be there ASAP.</p>
 
 <script>
     const COOLDOWN_KEY = 'poster1483_last_click';  // Shared across all users
-    const COOLDOWN_MS = 2 * 60 * 1000;             // 2 minutes
+    const COOLDOWN_MS = 5 * 60 * 1000;             // 2 minutes
     const btn = document.querySelector('button');
     const thanks = document.getElementById('thanks');
     const countdown = document.getElementById('countdown');
@@ -56,7 +56,7 @@
         // Cooldown over → reset UI
         btn.style.display = 'inline-block';
         btn.disabled = false;
-        btn.textContent = 'I scanned this poster! (100% anonymous)';
+        btn.textContent = 'Click to page me! (100% anonymous)';
         thanks.style.display = 'none';
         countdown.style.display = 'none';
         localStorage.removeItem(COOLDOWN_KEY); // Clean up
