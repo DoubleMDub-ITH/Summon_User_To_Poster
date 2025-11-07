@@ -5,29 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Poster Scan</title>
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      text-align: center;
-      padding: 40px;
-      background: #f4f4f4;
-      color: #333;
+    body{
+      font-family:'Segoe UI',sans-serif;
+      text-align:center;
+      padding:40px;
+      background:#f4f4f4;
+      color:#333;
     }
-    h1 { font-size: 1.8em; margin-bottom: 20px; }
-    button {
-      background: #2E8B57;
-      color: white;
-      border: none;
-      padding: 16px 32px;
-      font-size: 1.2em;
-      border-radius: 12px;
-      cursor: pointer;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      transition: 0.3s;
+    h1{font-size:1.8em;margin-bottom:20px}
+    button{
+      background:#2E8B57;color:#fff;border:none;
+      padding:16px 32px;font-size:1.2em;
+      border-radius:12px;cursor:pointer;
+      box-shadow:0 4px 8px rgba(0,0,0,.2);
+      transition:.3s;
     }
-    button:hover { background: #276945; transform: scale(1.05); }
-    button:disabled { opacity: 0.7; cursor: not-allowed; }
-    .thanks { margin-top: 20px; font-size: 1.1em; color: #2E8B57; display: none; }
-    .countdown { margin-top: 10px; font-size: 0.9em; color: #d35400; display: none; }
+    button:hover{background:#276945;transform:scale(1.05)}
+    button:disabled{opacity:.7;cursor:not-allowed}
+    .thanks{margin-top:20px;font-size:1.1em;color:#2E8B57;display:none}
+    .countdown{margin-top:10px;font-size:0.9em;color:#d35400;display:none}
   </style>
 </head>
 <body>
@@ -38,56 +34,81 @@
   <p class="countdown" id="countdown"></p>
 
   <script>
-    const COOLDOWN_KEY = 'poster1483_last_click';   // Shared key across all browsers
-    const COOLDOWN_MS  = 1 * 60 * 1000;             // 5 minutes (change to 2 * 60 * 1000 for 2 min)
-    const btn      = document.querySelector('button');
-    const thanks   = document.getElementById('thanks');
-    const countdown = document.getElementById('countdown');
+    // ---------- CONFIG ----------
+    const COOLDOWN_KEY = 'poster1483_last_click';   // shared across browsers
+    const COOLDOWN_MS  = 5 * 60 * 1000;              // 5 minutes
+    const btn          = document.querySelector('button');
+    const thanks       = document.getElementById('thanks');
+    const countdownEl  = document.getElementById('countdown');
+    let intervalId = null;
 
-    // Update UI based on cooldown
-    function updateButtonState() {
-      const lastClick = localStorage.getItem(COOLDOWN_KEY);
-      const now = Date.now();
+    // ---------- HELPERS ----------
+    function formatTime(seconds){
+      const m = Math.floor(seconds/60).toString().padStart(2,'0');
+      const s = (seconds%60).toString().padStart(2,'0');
+      return `${m}:${s}`;
+    }
 
-      if (lastClick && (now - parseInt(lastClick)) < COOLDOWN_MS) {
-        const remaining = Math.ceil((COOLDOWN_MS - (now - parseInt(lastClick))) / 1000);
+    function startCountdown(){
+      clearInterval(intervalId);               // safety
+      intervalId = setInterval(updateUI, 1000);
+      updateUI();                              // immediate first render
+    }
+
+    function stopCountdown(){
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+
+    // ---------- UI UPDATE ----------
+    function updateUI(){
+      const last = localStorage.getItem(COOLDOWN_KEY);
+      const now  = Date.now();
+
+      if (last && (now - parseInt(last)) < COOLDOWN_MS){
+        const remainingSec = Math.ceil((COOLDOWN_MS - (now - parseInt(last))) / 1000);
         btn.style.display = 'none';
         thanks.style.display = 'block';
-        countdown.textContent = `Button resets in ${remaining}s...`;
-        countdown.style.display = 'block';
+        countdownEl.textContent = `Button resets in ${formatTime(remainingSec)}`;
+        countdownEl.style.display = 'block';
       } else {
+        // cooldown over
         btn.style.display = 'inline-block';
         btn.disabled = false;
         btn.textContent = 'Click to page me! (100% anonymous)';
         thanks.style.display = 'none';
-        countdown.style.display = 'none';
+        countdownEl.style.display = 'none';
         localStorage.removeItem(COOLDOWN_KEY);
+        stopCountdown();
       }
     }
 
-    // Initial check + live countdown
-    updateButtonState();
-    setInterval(updateButtonState, 1000);
+    // ---------- PAGE LOAD ----------
+    updateUI();                // show current state
+    if (localStorage.getItem(COOLDOWN_KEY)) startCountdown();
 
-    // Click → send + enforce cooldown
-    async function sendScan() {
+    // ---------- CLICK ----------
+    async function sendScan(){
+      // prevent double-click while sending
       btn.disabled = true;
       btn.textContent = 'Sending…';
 
-      try {
-        await fetch('https://maker.ifttt.com/trigger/Paged to Poster/with/key/jULO7YKlFrrZw-hj7tG7v5x4AEz6TodDfU9_gMZsaKX', {
-          method: 'POST',
-          body: new URLSearchParams({
-            value1: new Date().toISOString(),
-            value2: 'poster_scan'
+      try{
+        await fetch('https://maker.ifttt.com/trigger/Paged to Poster/with/key/jULO7YKlFrrZw-hj7tG7v5x4AEz6TodDfU9_gMZsaKX',{
+          method:'POST',
+          body:new URLSearchParams({
+            value1:new Date().toISOString(),
+            value2:'poster_scan'
           })
         });
+        // success → lock
         localStorage.setItem(COOLDOWN_KEY, Date.now().toString());
-        updateButtonState();
-      } catch (e) {
-        console.warn('Send failed', e);
-        localStorage.setItem(COOLDOWN_KEY, Date.now().toString()); // Still lock to prevent spam
-        updateButtonState();
+        startCountdown();
+      }catch(e){
+        console.warn('Send failed',e);
+        // still lock to avoid spam
+        localStorage.setItem(COOLDOWN_KEY, Date.now().toString());
+        startCountdown();
       }
     }
   </script>
