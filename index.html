@@ -34,52 +34,65 @@
   <button onclick="sendScan()">Click to page me! (100% anonymous)</button>
   <p class="thanks" id="thanks">Sent 100% anonymously — Thank you! Be there ASAP.</p>
 
- <script>
-    async function sendScan() {
-      const btn = document.querySelector('button');
-      const thanks = document.getElementById('thanks');
+<script>
+    const COOLDOWN_KEY = 'poster1483_last_click';  // Shared across all users
+    const COOLDOWN_MS = 2 * 60 * 1000;             // 2 minutes
+    const btn = document.querySelector('button');
+    const thanks = document.getElementById('thanks');
+    const countdown = document.getElementById('countdown');
 
-      // === PREVENT RE-CLICK OR RELOAD TRICK ===
-      if (localStorage.getItem('poster1483_sent') === 'true') {
+    // === Check cooldown on load & every second ===
+    function updateButtonState() {
+      const lastClick = localStorage.getItem(COOLDOWN_KEY);
+      const now = Date.now();
+
+      if (lastClick && (now - parseInt(lastClick)) < COOLDOWN_MS) {
+        const remaining = Math.ceil((COOLDOWN_MS - (now - parseInt(lastClick))) / 1000);
         btn.style.display = 'none';
         thanks.style.display = 'block';
-        return;
+        countdown.textContent = `Button resets in ${remaining}s...`;
+        countdown.style.display = 'block';
+      } else {
+        // Cooldown over → reset UI
+        btn.style.display = 'inline-block';
+        btn.disabled = false;
+        btn.textContent = 'I scanned this poster! (100% anonymous)';
+        thanks.style.display = 'none';
+        countdown.style.display = 'none';
+        localStorage.removeItem(COOLDOWN_KEY); // Clean up
       }
+    }
 
-      // === DISABLE BUTTON & SHOW SENDING ===
+    // Update on load
+    updateButtonState();
+
+    // Update countdown every second
+    setInterval(updateButtonState, 1000);
+
+    // === Click handler ===
+    async function sendScan() {
       btn.disabled = true;
       btn.textContent = 'Sending…';
 
       try {
-        await fetch('https://maker.ifttt.com/trigger/Paged to Poster/with/key/jULO7YKlFrrZw-hj7tG7v5x4AEz6TodDfU9_gMZsaKX', {
+        await fetch('https://maker.ifttt.com/trigger/poster_scan_1483/with/key/YOUR_IFTTT_KEY', {
           method: 'POST',
           body: new URLSearchParams({
             value1: new Date().toISOString(),
             value2: 'poster_scan'
           })
         });
-        finish();  // Success
-      } catch (e) {
-        console.warn('Notification failed, but still marking as sent', e);
-        finish();  // Failure → still show thanks (no spam)
-      }
 
-      // === FINAL UI: Hide button, show thanks, remember forever ===
-      function finish() {
-        btn.style.display = 'none';
-        thanks.style.display = 'block';
-        localStorage.setItem('poster1483_sent', 'true');
+        // === SUCCESS: Lock for 2 minutes ===
+        localStorage.setItem(COOLDOWN_KEY, Date.now().toString());
+        updateButtonState(); // Immediate UI update
+      } catch (e) {
+        console.warn('Send failed', e);
+        // Even on failure, enforce cooldown to prevent spam
+        localStorage.setItem(COOLDOWN_KEY, Date.now().toString());
+        updateButtonState();
       }
     }
-
-    // === ON PAGE LOAD: Restore state if already sent ===
-    window.addEventListener('load', () => {
-      if (localStorage.getItem('poster1483_sent') === 'true') {
-        document.querySelector('button').style.display = 'none';
-        document.getElementById('thanks').style.display = 'block';
-      }
-    });
   </script>
 </body>
-</html>
 </html>
