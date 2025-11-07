@@ -25,7 +25,9 @@
       transition: 0.3s;
     }
     button:hover { background: #276945; transform: scale(1.05); }
+    button:disabled { opacity: 0.7; cursor: not-allowed; }
     .thanks { margin-top: 20px; font-size: 1.1em; color: #2E8B57; display: none; }
+    .countdown { margin-top: 10px; font-size: 0.9em; color: #d35400; display: none; }
   </style>
 </head>
 <body>
@@ -33,15 +35,16 @@
   <p>Tap below to let me know you are at poster 1483 and would like to talk to me! (This will page me!)</p>
   <button onclick="sendScan()">Click to page me! (100% anonymous)</button>
   <p class="thanks" id="thanks">Sent 100% anonymously — Thank you! Be there ASAP.</p>
+  <p class="countdown" id="countdown"></p>
 
-<script>
-    const COOLDOWN_KEY = 'poster1483_last_click';  // Shared across all users
-    const COOLDOWN_MS = 5 * 60 * 1000;             // 2 minutes
-    const btn = document.querySelector('button');
-    const thanks = document.getElementById('thanks');
+  <script>
+    const COOLDOWN_KEY = 'poster1483_last_click';   // Shared key across all browsers
+    const COOLDOWN_MS  = 1 * 60 * 1000;             // 5 minutes (change to 2 * 60 * 1000 for 2 min)
+    const btn      = document.querySelector('button');
+    const thanks   = document.getElementById('thanks');
     const countdown = document.getElementById('countdown');
 
-    // === Check cooldown on load & every second ===
+    // Update UI based on cooldown
     function updateButtonState() {
       const lastClick = localStorage.getItem(COOLDOWN_KEY);
       const now = Date.now();
@@ -53,23 +56,20 @@
         countdown.textContent = `Button resets in ${remaining}s...`;
         countdown.style.display = 'block';
       } else {
-        // Cooldown over → reset UI
         btn.style.display = 'inline-block';
         btn.disabled = false;
         btn.textContent = 'Click to page me! (100% anonymous)';
         thanks.style.display = 'none';
         countdown.style.display = 'none';
-        localStorage.removeItem(COOLDOWN_KEY); // Clean up
+        localStorage.removeItem(COOLDOWN_KEY);
       }
     }
 
-    // Update on load
+    // Initial check + live countdown
     updateButtonState();
-
-    // Update countdown every second
     setInterval(updateButtonState, 1000);
 
-    // === Click handler ===
+    // Click → send + enforce cooldown
     async function sendScan() {
       btn.disabled = true;
       btn.textContent = 'Sending…';
@@ -82,14 +82,11 @@
             value2: 'poster_scan'
           })
         });
-
-        // === SUCCESS: Lock for 2 minutes ===
         localStorage.setItem(COOLDOWN_KEY, Date.now().toString());
-        updateButtonState(); // Immediate UI update
+        updateButtonState();
       } catch (e) {
         console.warn('Send failed', e);
-        // Even on failure, enforce cooldown to prevent spam
-        localStorage.setItem(COOLDOWN_KEY, Date.now().toString());
+        localStorage.setItem(COOLDOWN_KEY, Date.now().toString()); // Still lock to prevent spam
         updateButtonState();
       }
     }
