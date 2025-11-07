@@ -30,9 +30,9 @@
 </head>
 <body>
   <h1>Thank you for scanning!</h1>
-  <p>Tap below to let me know you are at poster 1483 and would like to talk to me!:</p>
+  <p>Tap below to let me know you are at poster 1483 and would like to talk to me! (This will page me!):</p>
   <button onclick="sendScan()">I scanned this poster! (100% anonymous)</button>
-  <p class="thanks" id="thanks">Sent 100% anonymously — thank you! Be there ASAP.</p>
+  <p class="thanks" id="thanks">Sent 100% anonymously — Thank you! Be there ASAP.</p>
 
   <script>
     async function sendScan() {
@@ -43,12 +43,11 @@
       btn.textContent = "Sending...";
 
       try {
-        await fetch('https://hooks.zapier.com/hooks/catch/25280641/usgodzl/', {
+        await fetch('https://maker.ifttt.com/trigger/Page to Poster/with/key/jULO7YKlFrrZw-hj7tG7v5x4AEz6TodDfU9_gMZsaKX', {
           method: 'POST',
-          mode: 'no-cors',
-          body: JSON.stringify({
-            timestamp: new Date().toISOString(),
-            action: 'poster_scan'
+          body: new URLSearchParams({
+            value1: new Date().toISOString(),  // Maps to {{Value1}} in IFTTT
+            value2: 'poster_scan'              // Maps to {{Value2}} in IFTTT
           })
         });
         btn.style.display = 'none';
