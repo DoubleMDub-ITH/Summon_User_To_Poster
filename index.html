@@ -36,7 +36,7 @@
   <script>
     // ---------- CONFIG ----------
     const COOLDOWN_KEY = 'poster1483_last_click';   // shared across browsers
-    const COOLDOWN_MS  = 5 * 60 * 1000;              // 5 minutes
+    const COOLDOWN_MS  = 56 * 60 * 1000;              // 5 minutes
     const btn          = document.querySelector('button');
     const thanks       = document.getElementById('thanks');
     const countdownEl  = document.getElementById('countdown');
@@ -69,7 +69,7 @@
         const remainingSec = Math.ceil((COOLDOWN_MS - (now - parseInt(last))) / 1000);
         btn.style.display = 'none';
         thanks.style.display = 'block';
-        countdownEl.textContent = `Button resets in ${formatTime(remainingSec)}`;
+        countdownEl.textContent = `Button resets in ${formatTime(remainingSec)} (when conference starts!)`;
         countdownEl.style.display = 'block';
       } else {
         // cooldown over
